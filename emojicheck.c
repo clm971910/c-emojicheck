@@ -31,22 +31,14 @@ static const unsigned int s_utf8_head_mask_xor[] =
 };
 
 
-/*
- * func : get a gbk word from a specified position in gbk buffer
- *
- * args : str,slen, input string and its length
- *      : pos, the specified position in str, after calling pos will step one word
- *
- * ret  : 0, reache the end of str
- *      : else, word value
- */
-inline unsigned short get_utf8_word(const char * src, int slen, int *pos)
+
+unsigned short
+get_utf8_word(const char * src, int slen, int *pos)
 {
     
     unsigned char  ch  = src[ *pos ];
     unsigned int   len = s_head_byte_tab[ ch ];
     
-    // 看看越界了没有
     if ( *pos + len > (unsigned int)slen  )
         return 0;
     
@@ -66,20 +58,22 @@ inline unsigned short get_utf8_word(const char * src, int slen, int *pos)
 
 
 
-// 如何判断 emoji 表情
-bool string_contain_emoji( const char * start, int slen )
+
+/**
+ * 检查字符串src的从 *pos 开始的位置 是否为 emoji 字符，返回 true/false
+ *
+ * pos 只会修改为下一个字符的起始位置
+ */
+bool check_emoji( const char * src, int slen, int * pos )
 {
-    int            pos_h = 0;
-    unsigned short hs    = get_utf8_word( start, slen, &pos_h );
+    unsigned short hs = get_utf8_word( src, slen, pos );
     
     if ( 0 == hs ) return false;
     
-    int            pos_l = pos_h;
-    unsigned short ls    = get_utf8_word( start, slen, &pos_l );
+    unsigned short ls = get_utf8_word( src, slen, pos );
     
     if ( 0 == ls ) return false;
     
-    // 把 hs 和 ls 合并起来
     int uc = ((hs - 0xd800) * 0x400) + (ls - 0xdc00) + 0x10000;
     
     if ( uc > 0x1F680 && uc <= 0x1F6A4 ) return true;
@@ -98,16 +92,14 @@ bool string_contain_emoji( const char * start, int slen )
     
     if ( uc > 0x1F400 && uc <= 0x1F4FC )
     {
-        if (uc==0x1F441 || uc==0x1F43F || uc==0x1F4F8)
-            return false;
+        if ( uc == 0x1F441 || uc == 0x1F43F || uc == 0x1F4F8 ) return false;
         
         return true;
     }
     
     if ( uc > 0x1F600 && uc <= 0x1F64F )
     {
-        if (uc < 0x1F641 || uc > 0x1F644)
-            return false;
+        if ( uc < 0x1F641 || uc > 0x1F644 ) return false;
         
         return true;
     }
