@@ -6,4 +6,4 @@
 
 
 
-bool check_emoji( const char * src, int slen, int * pos );
+int check_emoji( const char * src, int slen, int * pos );
